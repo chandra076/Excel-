@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text to Excel Converter</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
+  <link rel="stylesheet" href="path/to/font-awesome/css/font-awesome.min.css">
+</head>
+<body>
+  <div id="container">
+    <div class="heading-top">Text to Excel Converter</div>
+    <div class="main-body">
+      <input type="file" id="file-input" accept=".txt" />
+      <br />
+      <button id="convert-btn" disabled>Convert to Excel</button>
+      <a id="download-link" style="display: none;">Download Excel</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('file-input').addEventListener('change', handleFile, false);
+    document.getElementById('convert-btn').addEventListener('click', convertToExcel, false);
+
+    var fileContents;
+
+    function handleFile(e) {
+      var file = e.target.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        fileContents = e.target.result;
+        var convertBtn = document.getElementById('convert-btn');
+        convertBtn.disabled = false;
+      };
+
+      reader.readAsText(file);
+    }
+
+    function convertToExcel() {
+      var rows = fileContents.split('\n');
+      var data = [];
+      for (var i = 0; i < rows.length; i++) {
+        var columns = rows[i].split(',');
+        var rowData = {
+          A: columns[0] || '',
+          B: columns[1] || '',
+          C: columns[2] || '',
+          SALE: columns[9] || ''
+        };
+        data.push(rowData);
+      }
+
+      var workbook = XLSX.utils.book_new();
+      var worksheet = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      var excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+      var dataBlob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      var url = URL.createObjectURL(dataBlob);
+
+      var downloadLink = document.getElementById('download-link');
+      downloadLink.href = url;
+      downloadLink.download = 'converted.xlsx';
+      downloadLink.style.display = 'block';
+
+      downloadLink.click();
+
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+      }, 100);
+    }
+  </script>
+</body>
+</html>
